@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Poker Range Explorer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="sidebar">
+
+    <div class="brand">
+      <div class="brand-mark">♠</div>
+      <div>
+        <h1>Poker Range</h1>
+        <span>Range Explorer</span>
+      </div>
+    </div>
+
+    <div class="position-list" id="position-list"></div>
+
+    <div class="sidebar-footer">
+      <div class="legend-mini">
+        <span><i class="dot raise"></i> Raise</span>
+        <span><i class="dot call"></i> Call</span>
+        <span><i class="dot fold"></i> Fold</span>
+      </div>
+
+      <p>Demo range data · replace with your GTO frequencies</p>
+    </div>
+
+  </aside>
+
+
+  <main class="main">
+
+    <header class="topbar">
+
+      <div>
+        <div class="eyebrow">Preflop Strategy</div>
+
+        <h2 id="range-title">CO RFI</h2>
+
+        <p id="range-subtitle">
+          Cutoff opens first-in against the remaining players.
+        </p>
+      </div>
+
+
+      <div class="controls">
+
+        <label>
+          <span>Stack</span>
+
+          <select id="stack" disabled>
+            <option>100 BB</option>
+          </select>
+        </label>
+
+
+        <label>
+          <span>Format</span>
+
+          <select id="format">
+            <option value="6max">6-Max</option>
+            <option value="9max">9-Max</option>
+          </select>
+        </label>
+
+      </div>
+
+    </header>
+
+
+    <section class="range-card">
+
+      <div class="range-toolbar">
+
+        <div class="stats">
+
+          <div>
+            <strong id="combo-count">169</strong>
+            <span>combos</span>
+          </div>
+
+          <div>
+            <strong id="range-percent">—</strong>
+            <span>range</span>
+          </div>
+
+          <div>
+            <strong id="raise-percent">—</strong>
+            <span>raise</span>
+          </div>
+
+        </div>
+
+
+        <div class="action-filter">
+
+          <button class="filter active" data-action="all">
+            All
+          </button>
+
+          <button class="filter" data-action="raise">
+            Raise
+          </button>
+
+          <button class="filter" data-action="call">
+            Call
+          </button>
+
+          <button class="filter" data-action="fold">
+            Fold
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div class="grid-wrap">
+        <div
+          class="hand-grid"
+          id="hand-grid"
+          aria-label="Poker starting hand range">
+        </div>
+      </div>
+
+
+      <div class="legend">
+
+        <div>
+          <span class="swatch raise"></span>
+          <span>Raise</span>
+        </div>
+
+        <div>
+          <span class="swatch call"></span>
+          <span>Call</span>
+        </div>
+
+        <div>
+          <span class="swatch fold"></span>
+          <span>Fold</span>
+        </div>
+
+        <div class="legend-note">
+          Hover a hand for frequency · click to pin details
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <section class="details-card" id="details-card">
+
+      <div class="details-hand" id="details-hand">
+        AA
+      </div>
+
+      <div class="details-main">
+
+        <h3 id="details-title">
+          Pocket Aces
+        </h3>
+
+        <p id="details-copy">
+          Click any hand in the matrix to inspect its action and frequency.
+        </p>
+
+      </div>
+
+      <div class="frequency">
+
+        <span>Frequency</span>
+
+        <strong id="details-frequency">
+          100%
+        </strong>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
