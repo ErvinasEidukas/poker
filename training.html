@@ -1,0 +1,3202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Poker Training</title>
+
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #111720;
+      --panel-2: #151c26;
+      --border: rgba(255,255,255,.08);
+      --text: #f2f5f8;
+      --muted: #8d98a6;
+      --green: #29c47d;
+      --green-dark: #123e2b;
+      --red: #ef6262;
+      --yellow: #e4b84b;
+      --blue: #5d9cff;
+      --table: #123d31;
+      --table-dark: #0b2b22;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top, #151d27 0%, #0b0f14 48%);
+      color: var(--text);
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    button,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* -------------------------------------------------- */
+    /* SIDEBAR */
+    /* -------------------------------------------------- */
+
+    .sidebar {
+      width: 230px;
+      min-height: 100vh;
+      padding: 22px 16px;
+      border-right: 1px solid var(--border);
+      background: #0d1218;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: #19212c;
+      color: white;
+      font-size: 22px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .brand span {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 12px;
+      border-radius: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .nav-link:hover {
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+    }
+
+    .nav-link.active {
+      background: rgba(41,196,125,.12);
+      color: var(--green);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    /* -------------------------------------------------- */
+    /* MAIN */
+    /* -------------------------------------------------- */
+
+    .main {
+      flex: 1;
+      min-width: 0;
+      padding: 26px;
+      overflow-x: hidden;
+    }
+
+    .topbar {
+      max-width: 1500px;
+      margin: 0 auto 20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-end;
+    }
+
+    .eyebrow {
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      margin-bottom: 7px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 25px;
+    }
+
+    .topbar p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .control {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .control span {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    select,
+    .new-hand {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 9px 12px;
+      outline: none;
+    }
+
+    .new-hand {
+      background: var(--green);
+      color: #06150e;
+      border-color: var(--green);
+      font-weight: 800;
+    }
+
+    .new-hand:hover {
+      filter: brightness(1.08);
+    }
+
+    /* -------------------------------------------------- */
+    /* SCENARIO BAR */
+    /* -------------------------------------------------- */
+
+    .scenario-bar {
+      max-width: 1500px;
+      margin: 0 auto 18px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 12px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .scenario-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .scenario-icon {
+      width: 35px;
+      height: 35px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: rgba(93,156,255,.12);
+      color: var(--blue);
+    }
+
+    .scenario-info strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .scenario-info span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    /* -------------------------------------------------- */
+    /* TABLE */
+    /* -------------------------------------------------- */
+
+    .table-container {
+      max-width: 1500px;
+      margin: 0 auto;
+    }
+
+    .poker-table {
+      position: relative;
+      width: 100%;
+      height: 680px;
+      min-height: 680px;
+      border-radius: 50%;
+      background:
+        radial-gradient(
+          ellipse at center,
+          #174b3b 0%,
+          #123c30 58%,
+          #0c2d24 100%
+        );
+
+      border: 14px solid #202830;
+      box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,.04),
+        inset 0 0 70px rgba(0,0,0,.3),
+        0 25px 70px rgba(0,0,0,.35);
+    }
+
+    .table-felt {
+      position: absolute;
+      inset: 18px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.06);
+      pointer-events: none;
+    }
+
+    /* -------------------------------------------------- */
+    /* CENTER */
+    /* -------------------------------------------------- */
+
+    .table-center {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 420px;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .pot-display {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 25px;
+      border-radius: 14px;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.07);
+      margin-bottom: 15px;
+    }
+
+    .pot-label {
+      color: rgba(255,255,255,.55);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+    }
+
+    .pot-value {
+      margin-top: 3px;
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .board {
+      display: flex;
+      justify-content: center;
+      gap: 7px;
+      min-height: 65px;
+    }
+
+    .card {
+      width: 45px;
+      height: 61px;
+      border-radius: 6px;
+      background: #f4f4f1;
+      color: #141414;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 17px;
+      box-shadow: 0 3px 7px rgba(0,0,0,.25);
+    }
+
+    .card.red {
+      color: #d63838;
+    }
+
+    .card.empty {
+      background: rgba(255,255,255,.045);
+      border: 1px dashed rgba(255,255,255,.12);
+      color: transparent;
+      box-shadow: none;
+    }
+
+    /* -------------------------------------------------- */
+    /* PLAYER SEATS */
+    /* -------------------------------------------------- */
+
+    .seat {
+      position: absolute;
+      width: 220px;
+      transform: translate(-50%, -50%);
+    }
+
+    .seat-utg {
+      left: 23%;
+      top: 15%;
+    }
+
+    .seat-hj {
+      left: 77%;
+      top: 15%;
+    }
+
+    .seat-co {
+      left: 90%;
+      top: 50%;
+    }
+
+    .seat-btn {
+      left: 77%;
+      top: 85%;
+    }
+
+    .seat-sb {
+      left: 23%;
+      top: 85%;
+    }
+
+    .seat-bb {
+      left: 10%;
+      top: 50%;
+    }
+
+    .player-hud {
+      position: relative;
+      padding: 11px 12px;
+      border: 1px solid rgba(255,255,255,.10);
+      background:
+        linear-gradient(
+          145deg,
+          rgba(20,28,38,.97),
+          rgba(12,17,23,.97)
+        );
+      border-radius: 11px;
+      box-shadow: 0 8px 22px rgba(0,0,0,.25);
+    }
+
+    .player-hud.hero {
+      border-color: rgba(41,196,125,.55);
+      box-shadow:
+        0 0 0 1px rgba(41,196,125,.08),
+        0 8px 22px rgba(0,0,0,.3);
+    }
+
+    .player-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .player-position {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .hero-badge {
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: rgba(41,196,125,.14);
+      color: var(--green);
+      font-size: 8px;
+      font-weight: 800;
+    }
+
+    .dealer-badge {
+      width: 19px;
+      height: 19px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #e7e7e7;
+      color: #222;
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .stats-row strong {
+      color: #dce2e8;
+      font-size: 10px;
+    }
+
+    .stack-row {
+      margin-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stack {
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    /* -------------------------------------------------- */
+    /* BET CHIP */
+    /* -------------------------------------------------- */
+
+    .bet-marker {
+      position: absolute;
+      min-width: 72px;
+      padding: 6px 9px;
+      border-radius: 8px;
+      background: rgba(8,11,15,.95);
+      border: 1px solid rgba(255,255,255,.10);
+      color: #fff;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 800;
+      box-shadow: 0 4px 12px rgba(0,0,0,.3);
+      white-space: nowrap;
+    }
+
+    .bet-marker span {
+      display: block;
+      color: var(--muted);
+      font-size: 8px;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .seat-utg .bet-marker {
+      right: -80px;
+      bottom: -34px;
+    }
+
+    .seat-hj .bet-marker {
+      left: -80px;
+      bottom: -34px;
+    }
+
+    .seat-co .bet-marker {
+      left: -82px;
+      top: 70px;
+    }
+
+    .seat-btn .bet-marker {
+      left: -80px;
+      top: -35px;
+    }
+
+    .seat-sb .bet-marker {
+      right: -80px;
+      top: -35px;
+    }
+
+    .seat-bb .bet-marker {
+      right: -82px;
+      top: 70px;
+    }
+
+    /* -------------------------------------------------- */
+    /* HERO CARDS */
+    /* -------------------------------------------------- */
+
+    .hero-cards {
+      position: absolute;
+      display: flex;
+      gap: 4px;
+      top: -62px;
+      right: 0;
+    }
+
+    .hero-cards .card {
+      width: 34px;
+      height: 47px;
+      font-size: 14px;
+    }
+
+    /* -------------------------------------------------- */
+    /* ACTION PANEL */
+    /* -------------------------------------------------- */
+
+    .below-table {
+      max-width: 1500px;
+      margin: 18px auto 0;
+      display: grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 18px;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 13px 15px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-header h3 {
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .panel-header span {
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .action-history {
+      padding: 12px 15px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .action-row {
+      display: grid;
+      grid-template-columns: 55px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,.045);
+      font-size: 11px;
+    }
+
+    .action-row:last-child {
+      border-bottom: 0;
+    }
+
+    .action-position {
+      font-weight: 800;
+    }
+
+    .action-name {
+      color: var(--muted);
+    }
+
+    .action-amount {
+      font-weight: 800;
+    }
+
+    .street-label {
+      margin: 11px 0 5px;
+      color: var(--green);
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+    }
+
+    /* -------------------------------------------------- */
+    /* REACTION PANEL */
+    /* -------------------------------------------------- */
+
+    .reaction-content {
+      padding: 15px;
+    }
+
+    .reaction-player {
+      margin-bottom: 13px;
+    }
+
+    .reaction-player:last-child {
+      margin-bottom: 0;
+    }
+
+    .reaction-name {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+
+    .reaction-name span {
+      color: var(--muted);
+    }
+
+    .reaction-bars {
+      display: flex;
+      height: 7px;
+      overflow: hidden;
+      border-radius: 5px;
+      background: #202731;
+    }
+
+    .reaction-bars div {
+      height: 100%;
+    }
+
+    .reaction-fold {
+      background: #59616d;
+    }
+
+    .reaction-call {
+      background: #5d9cff;
+    }
+
+    .reaction-raise {
+      background: var(--green);
+    }
+
+    .reaction-fourbet {
+      background: var(--yellow);
+    }
+
+    .reaction-legend {
+      display: flex;
+      gap: 9px;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 8px;
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-right: 3px;
+    }
+
+    /* -------------------------------------------------- */
+    /* DECISION */
+    /* -------------------------------------------------- */
+
+    .decision-panel {
+      max-width: 1500px;
+      margin: 18px auto 30px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 12px;
+    }
+
+    .decision-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .decision-header strong {
+      font-size: 13px;
+    }
+
+    .decision-header span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .decision-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 14px;
+    }
+
+    .decision-button {
+      flex: 1;
+      min-width: 100px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      color: var(--text);
+      background: #181f28;
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    .decision-button:hover {
+      border-color: rgba(255,255,255,.2);
+      background: #202934;
+    }
+
+    .decision-button.primary {
+      background: rgba(41,196,125,.13);
+      border-color: rgba(41,196,125,.35);
+      color: var(--green);
+    }
+
+    .decision-button.danger {
+      background: rgba(239,98,98,.10);
+      border-color: rgba(239,98,98,.25);
+      color: #f17b7b;
+    }
+
+    .feedback {
+      display: none;
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .feedback.show {
+      display: block;
+    }
+
+    .feedback.correct {
+      background: rgba(41,196,125,.09);
+      border: 1px solid rgba(41,196,125,.2);
+      color: #9be7c4;
+    }
+
+    .feedback.incorrect {
+      background: rgba(239,98,98,.08);
+      border: 1px solid rgba(239,98,98,.2);
+      color: #f2a3a3;
+    }
+
+    /* -------------------------------------------------- */
+    /* RESPONSIVE */
+    /* -------------------------------------------------- */
+
+    @media (max-width: 1100px) {
+      .sidebar {
+        width: 190px;
+      }
+
+      .poker-table {
+        height: 600px;
+        min-height: 600px;
+      }
+
+      .seat {
+        width: 190px;
+      }
+
+      .player-hud {
+        padding: 9px;
+      }
+
+      .below-table {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 800px) {
+      .app {
+        display: block;
+      }
+
+      .sidebar {
+        width: 100%;
+        min-height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .sidebar-footer {
+        display: none;
+      }
+
+      .main {
+        padding: 15px;
+      }
+
+      .topbar {
+        display: block;
+      }
+
+      .controls {
+        margin-top: 15px;
+      }
+
+      .poker-table {
+        height: 720px;
+        min-height: 720px;
+        border-radius: 35px;
+      }
+
+      .seat {
+        width: 175px;
+      }
+
+      .seat-utg {
+        left: 25%;
+        top: 14%;
+      }
+
+      .seat-hj {
+        left: 75%;
+        top: 14%;
+      }
+
+      .seat-co {
+        left: 86%;
+        top: 42%;
+      }
+
+      .seat-btn {
+        left: 75%;
+        top: 84%;
+      }
+
+      .seat-sb {
+        left: 25%;
+        top: 84%;
+      }
+
+      .seat-bb {
+        left: 14%;
+        top: 42%;
+      }
+
+      .table-center {
+        width: 300px;
+      }
+
+      .card {
+        width: 38px;
+        height: 53px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .poker-table {
+        height: 760px;
+        min-height: 760px;
+        border-width: 8px;
+      }
+
+      .seat {
+        width: 145px;
+      }
+
+      .stats-row {
+        gap: 5px;
+        font-size: 8px;
+      }
+
+      .stats-row strong {
+        font-size: 9px;
+      }
+
+      .player-position {
+        font-size: 11px;
+      }
+
+      .stack {
+        font-size: 11px;
+      }
+
+      .table-center {
+        width: 230px;
+      }
+
+      .pot-display {
+        padding: 8px 15px;
+      }
+
+      .pot-value {
+        font-size: 19px;
+      }
+
+      .card {
+        width: 32px;
+        height: 46px;
+        font-size: 13px;
+      }
+
+      .below-table {
+        display: block;
+      }
+
+      .panel {
+        margin-bottom: 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+
+  <aside class="sidebar">
+
+    <div class="brand">
+      <div class="brand-mark">♠</div>
+
+      <div>
+        <h1>Poker Training</h1>
+        <span>Decision Trainer</span>
+      </div>
+    </div>
+
+    <a href="index.html" class="nav-link">
+      <span>▦</span>
+      Range Explorer
+    </a>
+
+    <a href="training.html" class="nav-link active">
+      <span>♠</span>
+      Training
+    </a>
+
+    <div class="sidebar-footer">
+      <p>
+        Demo training engine.
+        Player reaction frequencies can later
+        be replaced with your GTO data.
+      </p>
+    </div>
+
+  </aside>
+
+
+  <!-- MAIN -->
+
+  <main class="main">
+
+    <header class="topbar">
+
+      <div>
+        <div class="eyebrow">Poker Decision Trainer</div>
+
+        <h2 id="page-title">
+          6-Max Cash Game
+        </h2>
+
+        <p id="scenario-description">
+          Face a preflop raise and make the correct decision.
+        </p>
+      </div>
+
+
+      <div class="controls">
+
+        <label class="control">
+          <span>Format</span>
+
+          <select id="format-select">
+            <option value="6max">6-Max</option>
+          </select>
+        </label>
+
+        <label class="control">
+          <span>Stack</span>
+
+          <select id="stack-select">
+            <option value="100">100 BB</option>
+            <option value="50">50 BB</option>
+            <option value="25">25 BB</option>
+          </select>
+        </label>
+
+      </div>
+
+    </header>
+
+
+    <!-- SCENARIO SELECTOR -->
+
+    <section class="scenario-bar">
+
+      <div class="scenario-info">
+
+        <div class="scenario-icon">
+          ♠
+        </div>
+
+        <div>
+          <strong>Training Scenario</strong>
+          <span id="scenario-help">
+            Select the type of poker situation you want to train.
+          </span>
+        </div>
+
+      </div>
+
+
+      <select id="scenario-select">
+
+        <option value="rfi">
+          RFI — Open First In
+        </option>
+
+        <option value="facing-rfi" selected>
+          Facing RFI
+        </option>
+
+        <option value="facing-3bet">
+          Facing 3-Bet
+        </option>
+
+        <option value="blind-vs-blind">
+          Blind vs Blind
+        </option>
+
+        <option value="limped-pot">
+          Limped Pot
+        </option>
+
+        <option value="3bet-pot">
+          3-Bet Pot
+        </option>
+
+        <option value="4bet-pot">
+          4-Bet Pot
+        </option>
+
+        <option value="flop-srp">
+          Flop — Single Raised Pot
+        </option>
+
+        <option value="flop-3bet">
+          Flop — 3-Bet Pot
+        </option>
+
+        <option value="turn">
+          Turn Decision
+        </option>
+
+        <option value="river">
+          River Decision
+        </option>
+
+      </select>
+
+
+      <button class="new-hand" id="new-hand">
+        New Hand
+      </button>
+
+    </section>
+
+
+    <!-- POKER TABLE -->
+
+    <section class="table-container">
+
+      <div class="poker-table">
+
+        <div class="table-felt"></div>
+
+
+        <!-- CENTER OF TABLE -->
+
+        <div class="table-center">
+
+          <div class="pot-display">
+
+            <div class="pot-label">
+              Current Pot
+            </div>
+
+            <div class="pot-value" id="pot-value">
+              3.5 BB
+            </div>
+
+          </div>
+
+
+          <div class="board" id="board">
+
+            <div class="card empty"></div>
+            <div class="card empty"></div>
+            <div class="card empty"></div>
+            <div class="card empty"></div>
+            <div class="card empty"></div>
+
+          </div>
+
+        </div>
+
+
+        <!-- UTG -->
+
+        <div class="seat seat-utg" data-position="UTG">
+
+          <div class="player-hud" id="hud-UTG">
+
+            <div class="player-top">
+
+              <div class="player-position">
+                <span>UTG</span>
+              </div>
+
+            </div>
+
+            <div class="stats-row">
+              <span>VPIP <strong id="vpip-UTG">21</strong></span>
+              <span>PFR <strong id="pfr-UTG">17</strong></span>
+              <span>3B <strong id="threebet-UTG">7</strong></span>
+            </div>
+
+            <div class="stack-row">
+              <span class="stack" id="stack-UTG">100 BB</span>
+              <span class="status" id="status-UTG">Waiting</span>
+            </div>
+
+          </div>
+
+          <div class="bet-marker" id="bet-UTG">
+            0 BB
+            <span>current bet</span>
+          </div>
+
+        </div>
+
+
+        <!-- HJ -->
+
+        <div class="seat seat-hj" data-position="HJ">
+
+          <div class="player-hud" id="hud-HJ">
+
+            <div class="player-top">
+
+              <div class="player-position">
+                <span>HJ</span>
+              </div>
+
+            </div>
+
+            <div class="stats-row">
+              <span>VPIP <strong id="vpip-HJ">24</strong></span>
+              <span>PFR <strong id="pfr-HJ">19</strong></span>
+              <span>3B <strong id="threebet-HJ">8</strong></span>
+            </div>
+
+            <div class="stack-row">
+              <span class="stack" id="stack-HJ">100 BB</span>
+              <span class="status" id="status-HJ">Waiting</span>
+            </div>
+
+          </div>
+
+          <div class="bet-marker" id="bet-HJ">
+            0 BB
+            <span>current bet</span>
+          </div>
+
+        </div>
+
+
+        <!-- CO -->
+
+        <div class="seat seat-co" data-position="CO">
+
+          <div class="player-hud hero" id="hud-CO">
+
+            <div class="hero-cards" id="hero-cards">
+              <div class="card">A♠</div>
+              <div class="card">J♣</div>
+            </div>
+
+            <div class="player-top">
+
+              <div class="player-position">
+
+                <span>CO</span>
+
+                <span class="hero-badge">
+                  HERO
+                </span>
+
+              </div>
+
+            </div>
+
+            <div class="stats-row">
+              <span>VPIP <strong>—</strong></span>
+              <span>PFR <strong>—</strong></span>
+              <span>3B <strong>—</strong></span>
+            </div>
+
+            <div class="stack-row">
+              <span class="stack" id="stack-CO">100 BB</span>
+              <span class="status" id="status-CO">YOUR TURN</span>
+            </div>
+
+          </div>
+
+          <div class="bet-marker" id="bet-CO">
+            0 BB
+            <span>current bet</span>
+          </div>
+
+        </div>
+
+
+        <!-- BTN -->
+
+        <div class="seat seat-btn" data-position="BTN">
+
+          <div class="player-hud" id="hud-BTN">
+
+            <div class="player-top">
+
+              <div class="player-position">
+
+                <span>BTN</span>
+
+                <span class="dealer-badge">
+                  D
+                </span>
+
+              </div>
+
+            </div>
+
+            <div class="stats-row">
+              <span>VPIP <strong id="vpip-BTN">32</strong></span>
+              <span>PFR <strong id="pfr-BTN">27</strong></span>
+              <span>3B <strong id="threebet-BTN">12</strong></span>
+            </div>
+
+            <div class="stack-row">
+              <span class="stack" id="stack-BTN">100 BB</span>
+              <span class="status" id="status-BTN">Waiting</span>
+            </div>
+
+          </div>
+
+          <div class="bet-marker" id="bet-BTN">
+            0 BB
+            <span>current bet</span>
+          </div>
+
+        </div>
+
+
+        <!-- SB -->
+
+        <div class="seat seat-sb" data-position="SB">
+
+          <div class="player-hud" id="hud-SB">
+
+            <div class="player-top">
+
+              <div class="player-position">
+                <span>SB</span>
+              </div>
+
+            </div>
+
+            <div class="stats-row">
+              <span>VPIP <strong id="vpip-SB">25</strong></span>
+              <span>PFR <strong id="pfr-SB">20</strong></span>
+              <span>3B <strong id="threebet-SB">8</strong></span>
+            </div>
+
+            <div class="stack-row">
+              <span class="stack" id="stack-SB">99.5 BB</span>
+              <span class="status" id="status-SB">SB</span>
+            </div>
+
+          </div>
+
+          <div class="bet-marker" id="bet-SB">
+            0.5 BB
+            <span>blind</span>
+          </div>
+
+        </div>
+
+
+        <!-- BB -->
+
+        <div class="seat seat-bb" data-position="BB">
+
+          <div class="player-hud" id="hud-BB">
+
+            <div class="player-top">
+
+              <div class="player-position">
+                <span>BB</span>
+              </div>
+
+            </div>
+
+            <div class="stats-row">
+              <span>VPIP <strong id="vpip-BB">24</strong></span>
+              <span>PFR <strong id="pfr-BB">18</strong></span>
+              <span>3B <strong id="threebet-BB">6</strong></span>
+            </div>
+
+            <div class="stack-row">
+              <span class="stack" id="stack-BB">99 BB</span>
+              <span class="status" id="status-BB">BB</span>
+            </div>
+
+          </div>
+
+          <div class="bet-marker" id="bet-BB">
+            1 BB
+            <span>blind</span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- LOWER INFORMATION -->
+
+    <section class="below-table">
+
+      <!-- ACTION HISTORY -->
+
+      <div class="panel">
+
+        <div class="panel-header">
+
+          <h3>Action History</h3>
+
+          <span id="street-display">
+            Preflop
+          </span>
+
+        </div>
+
+        <div class="action-history" id="action-history">
+
+          <div class="street-label">
+            Preflop
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- PLAYER REACTIONS -->
+
+      <div class="panel">
+
+        <div class="panel-header">
+
+          <h3>Player Reaction Model</h3>
+
+          <span>Demo frequencies</span>
+
+        </div>
+
+        <div class="reaction-content" id="reaction-content">
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- DECISION -->
+
+    <section class="decision-panel">
+
+      <div class="decision-header">
+
+        <div>
+          <strong id="decision-title">
+            Your Decision
+          </strong>
+
+          <span id="decision-subtitle">
+            CO · Facing UTG open
+          </span>
+        </div>
+
+        <span id="decision-pot">
+          Pot: 4.5 BB
+        </span>
+
+      </div>
+
+
+      <div class="decision-buttons" id="decision-buttons">
+
+      </div>
+
+
+      <div class="feedback" id="feedback">
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<script>
+
+  /* ==================================================
+     TRAINING DATA
+  ================================================== */
+
+  const positions = [
+    "UTG",
+    "HJ",
+    "CO",
+    "BTN",
+    "SB",
+    "BB"
+  ];
+
+
+  const scenarioDescriptions = {
+
+    "rfi":
+      "Choose whether Hero should open the pot first-in.",
+
+    "facing-rfi":
+      "A player has opened before Hero. Decide how to respond.",
+
+    "facing-3bet":
+      "Hero opened and is now facing a 3-bet.",
+
+    "blind-vs-blind":
+      "A blind-vs-blind situation with a wide range.",
+
+    "limped-pot":
+      "A player has limped and Hero must decide how to respond.",
+
+    "3bet-pot":
+      "Hero is playing a pot that was 3-bet preflop.",
+
+    "4bet-pot":
+      "Hero is facing a 4-bet decision.",
+
+    "flop-srp":
+      "A single-raised pot has reached the flop.",
+
+    "flop-3bet":
+      "A 3-bet pot has reached the flop.",
+
+    "turn":
+      "The hand has reached the turn and Hero must act.",
+
+    "river":
+      "The hand has reached the river and Hero must act."
+  };
+
+
+  /*
+    Player profiles.
+
+    These are intentionally separated from the
+    table state so they can later be replaced by
+    real population or GTO reaction data.
+  */
+
+  const playerProfiles = {
+
+    TAG: {
+      reactions: {
+        fold: 45,
+        call: 35,
+        raise: 20
+      }
+    },
+
+    REG: {
+      reactions: {
+        fold: 35,
+        call: 40,
+        raise: 25
+      }
+    },
+
+    LAG: {
+      reactions: {
+        fold: 25,
+        call: 35,
+        raise: 40
+      }
+    },
+
+    FISH: {
+      reactions: {
+        fold: 20,
+        call: 55,
+        raise: 25
+      }
+    }
+  };
+
+
+  /* ==================================================
+     STATE
+  ================================================== */
+
+  let state = null;
+
+
+  /* ==================================================
+     HELPERS
+  ================================================== */
+
+  function random(min, max) {
+    return Math.floor(
+      Math.random() * (max - min + 1)
+    ) + min;
+  }
+
+
+  function randomChoice(array) {
+    return array[
+      Math.floor(Math.random() * array.length)
+    ];
+  }
+
+
+  function generateStats() {
+
+    const vpip = random(18, 38);
+
+    const pfr = random(
+      Math.max(12, vpip - 8),
+      Math.max(13, vpip - 2)
+    );
+
+    const threeBet = random(4, 14);
+
+    return {
+      vpip,
+      pfr,
+      threeBet
+    };
+  }
+
+
+  function determineProfile(stats) {
+
+    if (stats.vpip >= 32) {
+      return "LAG";
+    }
+
+    if (stats.vpip >= 27) {
+      return "FISH";
+    }
+
+    if (
+      stats.vpip <= 22 &&
+      stats.pfr <= 19
+    ) {
+      return "TAG";
+    }
+
+    return "REG";
+  }
+
+
+  function randomCard() {
+
+    const ranks = [
+      "A",
+      "K",
+      "Q",
+      "J",
+      "T",
+      "9",
+      "8",
+      "7",
+      "6",
+      "5",
+      "4",
+      "3",
+      "2"
+    ];
+
+    const suits = [
+      "♠",
+      "♥",
+      "♦",
+      "♣"
+    ];
+
+    return (
+      randomChoice(ranks) +
+      randomChoice(suits)
+    );
+  }
+
+
+  function generateCards(count) {
+
+    const cards = [];
+
+    while (cards.length < count) {
+
+      const card = randomCard();
+
+      if (!cards.includes(card)) {
+        cards.push(card);
+      }
+    }
+
+    return cards;
+  }
+
+
+  function cardIsRed(card) {
+
+    return (
+      card.includes("♥") ||
+      card.includes("♦")
+    );
+  }
+
+
+  /* ==================================================
+     PLAYER GENERATION
+  ================================================== */
+
+  function createPlayers(heroPosition) {
+
+    const players = {};
+
+    positions.forEach(position => {
+
+      const stats = generateStats();
+
+      players[position] = {
+
+        position,
+
+        stack: Number(
+          document.getElementById("stack-select").value
+        ),
+
+        vpip: stats.vpip,
+        pfr: stats.pfr,
+        threeBet: stats.threeBet,
+
+        profile: determineProfile(stats),
+
+        currentBet: 0,
+
+        action: "waiting",
+
+        folded: false,
+
+        holeCards: []
+      };
+
+    });
+
+
+    /*
+      Hero does not need opponent statistics.
+    */
+
+    players[heroPosition].isHero = true;
+
+
+    /*
+      Blinds.
+    */
+
+    players.SB.currentBet = .5;
+
+    players.BB.currentBet = 1;
+
+    players.SB.stack -= .5;
+
+    players.BB.stack -= 1;
+
+
+    return players;
+  }
+
+
+  /* ==================================================
+     SCENARIO GENERATION
+  ================================================== */
+
+  function generateScenario() {
+
+    const scenario =
+      document.getElementById("scenario-select").value;
+
+    let heroPosition =
+      randomChoice(positions);
+
+    /*
+      For easier training, make Hero a
+      position relevant to the selected scenario.
+    */
+
+    if (scenario === "rfi") {
+      heroPosition = randomChoice([
+        "UTG",
+        "HJ",
+        "CO",
+        "BTN"
+      ]);
+    }
+
+    if (scenario === "facing-rfi") {
+      heroPosition = randomChoice([
+        "HJ",
+        "CO",
+        "BTN",
+        "SB",
+        "BB"
+      ]);
+    }
+
+    if (scenario === "blind-vs-blind") {
+      heroPosition = randomChoice([
+        "SB",
+        "BB"
+      ]);
+    }
+
+
+    const players =
+      createPlayers(heroPosition);
+
+
+    const heroCards =
+      generateCards(2);
+
+
+    const board =
+      generateCards(
+        scenario === "flop-srp" ||
+        scenario === "flop-3bet" ||
+        scenario === "turn" ||
+        scenario === "river"
+          ? 5
+          : 0
+      );
+
+
+    const actions = [];
+
+
+    /*
+      Start with blinds.
+    */
+
+    actions.push({
+      position: "SB",
+      action: "blind",
+      amount: .5
+    });
+
+    actions.push({
+      position: "BB",
+      action: "blind",
+      amount: 1
+    });
+
+
+    let pot = 1.5;
+
+
+    /*
+      Scenario: RFI
+    */
+
+    if (scenario === "rfi") {
+
+      const hero = players[heroPosition];
+
+      hero.action = "decision";
+
+    }
+
+
+    /*
+      Scenario: Facing RFI
+    */
+
+    if (scenario === "facing-rfi") {
+
+      const heroIndex =
+        positions.indexOf(heroPosition);
+
+      const possibleOpeners =
+        positions.slice(0, heroIndex);
+
+      let opener =
+        randomChoice(
+          possibleOpeners.length
+            ? possibleOpeners
+            : ["UTG"]
+        );
+
+
+      /*
+        If Hero is in BB/SB, create a BTN/CO
+        style opener.
+      */
+
+      if (
+        heroPosition === "SB" ||
+        heroPosition === "BB"
+      ) {
+        opener = "BTN";
+      }
+
+
+      players[opener].action = "raise";
+      players[opener].currentBet = 2.5;
+      players[opener].stack -= 2.5;
+
+      actions.push({
+        position: opener,
+        action: "raise",
+        amount: 2.5
+      });
+
+
+      pot += 2.5;
+
+
+      positions.forEach(position => {
+
+        if (
+          position === heroPosition ||
+          position === opener ||
+          position === "SB" ||
+          position === "BB"
+        ) {
+          return;
+        }
+
+        players[position].action = "fold";
+        players[position].folded = true;
+
+        actions.push({
+          position,
+          action: "fold"
+        });
+
+      });
+
+
+      players[heroPosition].action = "decision";
+
+    }
+
+
+    /*
+      Scenario: Facing 3-bet
+    */
+
+    if (scenario === "facing-3bet") {
+
+      const opener = "CO";
+
+      players[opener].action = "raise";
+      players[opener].currentBet = 2.5;
+      players[opener].stack -= 2.5;
+
+      actions.push({
+        position: opener,
+        action: "raise",
+        amount: 2.5
+      });
+
+      pot += 2.5;
+
+
+      const threeBettor = "BTN";
+
+      players[threeBettor].action = "3bet";
+      players[threeBettor].currentBet = 9;
+      players[threeBettor].stack -= 9;
+
+      actions.push({
+        position: threeBettor,
+        action: "3bet",
+        amount: 9
+      });
+
+      pot += 9;
+
+
+      players[heroPosition].action = "decision";
+
+    }
+
+
+    /*
+      Blind vs blind
+    */
+
+    if (scenario === "blind-vs-blind") {
+
+      if (heroPosition === "BB") {
+
+        players.SB.action = "raise";
+        players.SB.currentBet = 3;
+        players.SB.stack -= 3;
+
+        actions.push({
+          position: "SB",
+          action: "raise",
+          amount: 3
+        });
+
+        pot += 3;
+
+      } else {
+
+        players.SB.action = "decision";
+
+      }
+
+
+      players[heroPosition].action = "decision";
+    }
+
+
+    /*
+      Limped pot
+    */
+
+    if (scenario === "limped-pot") {
+
+      const limper = "CO";
+
+      players[limper].action = "limp";
+      players[limper].currentBet = 1;
+      players[limper].stack -= 1;
+
+      actions.push({
+        position: limper,
+        action: "limp",
+        amount: 1
+      });
+
+      pot += 1;
+
+      players[heroPosition].action = "decision";
+    }
+
+
+    /*
+      3-bet / 4-bet pots
+    */
+
+    if (scenario === "3bet-pot") {
+
+      players.CO.action = "raise";
+      players.CO.currentBet = 2.5;
+      players.CO.stack -= 2.5;
+
+      actions.push({
+        position: "CO",
+        action: "raise",
+        amount: 2.5
+      });
+
+      pot += 2.5;
+
+
+      players.BTN.action = "3bet";
+      players.BTN.currentBet = 9;
+      players.BTN.stack -= 9;
+
+      actions.push({
+        position: "BTN",
+        action: "3bet",
+        amount: 9
+      });
+
+      pot += 9;
+
+      players[heroPosition].action = "decision";
+    }
+
+
+    if (scenario === "4bet-pot") {
+
+      players.CO.action = "raise";
+      players.CO.currentBet = 2.5;
+      players.CO.stack -= 2.5;
+
+      actions.push({
+        position: "CO",
+        action: "raise",
+        amount: 2.5
+      });
+
+      pot += 2.5;
+
+
+      players.BTN.action = "3bet";
+      players.BTN.currentBet = 9;
+      players.BTN.stack -= 9;
+
+      actions.push({
+        position: "BTN",
+        action: "3bet",
+        amount: 9
+      });
+
+      pot += 9;
+
+
+      players.CO.action = "4bet";
+      players.CO.currentBet = 22;
+      players.CO.stack -= 22;
+
+      actions.push({
+        position: "CO",
+        action: "4bet",
+        amount: 22
+      });
+
+      pot += 22;
+
+      players[heroPosition].action = "decision";
+    }
+
+
+    /*
+      Postflop scenarios.
+    */
+
+    if (
+      scenario === "flop-srp" ||
+      scenario === "flop-3bet" ||
+      scenario === "turn" ||
+      scenario === "river"
+    ) {
+
+      /*
+        Create a believable preflop pot.
+      */
+
+      if (scenario === "flop-srp") {
+
+        players.CO.action = "raise";
+        players.CO.currentBet = 2.5;
+        players.CO.stack -= 2.5;
+
+        actions.push({
+          position: "CO",
+          action: "raise",
+          amount: 2.5
+        });
+
+        pot += 2.5;
+
+      }
+
+
+      if (scenario === "flop-3bet") {
+
+        players.CO.action = "raise";
+        players.CO.currentBet = 2.5;
+        players.CO.stack -= 2.5;
+
+        actions.push({
+          position: "CO",
+          action: "raise",
+          amount: 2.5
+        });
+
+        pot += 2.5;
+
+
+        players.BTN.action = "3bet";
+        players.BTN.currentBet = 9;
+        players.BTN.stack -= 9;
+
+        actions.push({
+          position: "BTN",
+          action: "3bet",
+          amount: 9
+        });
+
+        pot += 9;
+
+      }
+
+
+      /*
+        Add flop action.
+      */
+
+      if (
+        scenario === "flop-srp" ||
+        scenario === "flop-3bet"
+      ) {
+
+        const bettor =
+          heroPosition === "CO"
+            ? "BTN"
+            : "CO";
+
+        players[bettor].action = "bet";
+
+        actions.push({
+          street: "flop",
+          position: bettor,
+          action: "bet",
+          amount: Math.round(pot * .5 * 10) / 10
+        });
+
+      }
+
+
+      /*
+        Turn and river have additional action.
+      */
+
+      if (scenario === "turn") {
+
+        actions.push({
+          street: "flop",
+          position: "BTN",
+          action: "check"
+        });
+
+        actions.push({
+          street: "turn",
+          position: "BTN",
+          action: "bet",
+          amount: 6
+        });
+
+        pot += 6;
+      }
+
+
+      if (scenario === "river") {
+
+        actions.push({
+          street: "flop",
+          position: "BTN",
+          action: "check"
+        });
+
+        actions.push({
+          street: "turn",
+          position: "BTN",
+          action: "check"
+        });
+
+        actions.push({
+          street: "river",
+          position: "BTN",
+          action: "bet",
+          amount: 12
+        });
+
+        pot += 12;
+      }
+
+
+      players[heroPosition].action = "decision";
+
+    }
+
+
+    /*
+      Determine decision actions.
+    */
+
+    let availableActions = [
+      "fold",
+      "call",
+      "raise"
+    ];
+
+
+    if (scenario === "rfi") {
+      availableActions = [
+        "fold",
+        "raise"
+      ];
+    }
+
+    if (scenario === "limped-pot") {
+      availableActions = [
+        "check",
+        "raise"
+      ];
+    }
+
+    if (scenario === "facing-3bet") {
+      availableActions = [
+        "fold",
+        "call",
+        "4bet"
+      ];
+    }
+
+    if (scenario === "4bet-pot") {
+      availableActions = [
+        "fold",
+        "call",
+        "all-in"
+      ];
+    }
+
+    if (
+      scenario === "flop-srp" ||
+      scenario === "flop-3bet" ||
+      scenario === "turn" ||
+      scenario === "river"
+    ) {
+      availableActions = [
+        "fold",
+        "call",
+        "raise"
+      ];
+    }
+
+
+    /*
+      Demo correct answer.
+
+      This is intentionally simple.
+      Later this can be replaced with
+      exact hand/range/GTO frequencies.
+    */
+
+    const rank = heroCards[0][0];
+
+    let correctAction = "fold";
+
+    if (
+      ["A", "K"].includes(rank)
+    ) {
+      correctAction = "raise";
+    }
+
+    if (
+      ["Q", "J"].includes(rank)
+    ) {
+      correctAction =
+        availableActions.includes("call")
+          ? "call"
+          : "raise";
+    }
+
+
+    if (scenario === "rfi") {
+      correctAction =
+        ["A", "K", "Q", "J", "T"].includes(rank)
+          ? "raise"
+          : "fold";
+    }
+
+
+    if (scenario === "facing-3bet") {
+
+      correctAction =
+        ["A", "K"].includes(rank)
+          ? "4bet"
+          : "call";
+
+    }
+
+
+    if (scenario === "4bet-pot") {
+
+      correctAction =
+        rank === "A"
+          ? "all-in"
+          : "fold";
+
+    }
+
+
+    if (
+      !availableActions.includes(correctAction)
+    ) {
+      correctAction =
+        availableActions[
+          Math.min(
+            1,
+            availableActions.length - 1
+          )
+        ];
+    }
+
+
+    state = {
+
+      scenario,
+
+      hero: {
+        position: heroPosition,
+        cards: heroCards
+      },
+
+      players,
+
+      board,
+
+      actions,
+
+      pot,
+
+      availableActions,
+
+      correctAction,
+
+      answered: false
+
+    };
+
+
+    render();
+  }
+
+
+  /* ==================================================
+     RENDER
+  ================================================== */
+
+  function render() {
+
+    renderScenario();
+
+    renderPlayers();
+
+    renderBoard();
+
+    renderActions();
+
+    renderReactions();
+
+    renderDecision();
+
+  }
+
+
+  function renderScenario() {
+
+    const scenario =
+      state.scenario;
+
+    document.getElementById(
+      "scenario-description"
+    ).textContent =
+      scenarioDescriptions[scenario];
+
+    document.getElementById(
+      "scenario-help"
+    ).textContent =
+      scenarioDescriptions[scenario];
+
+  }
+
+
+  function renderPlayers() {
+
+    positions.forEach(position => {
+
+      const player =
+        state.players[position];
+
+      document.getElementById(
+        `vpip-${position}`
+      ).textContent =
+        player.vpip ?? "—";
+
+      document.getElementById(
+        `pfr-${position}`
+      ).textContent =
+        player.pfr ?? "—";
+
+      document.getElementById(
+        `threebet-${position}`
+      ).textContent =
+        player.threeBet ?? "—";
+
+
+      document.getElementById(
+        `stack-${position}`
+      ).textContent =
+        `${round(player.stack)} BB`;
+
+
+      document.getElementById(
+        `bet-${position}`
+      ).innerHTML =
+        `${round(player.currentBet)} BB
+         <span>${betLabel(player)}</span>`;
+
+
+      document.getElementById(
+        `status-${position}`
+      ).textContent =
+        player.action === "decision"
+          ? "YOUR TURN"
+          : player.action;
+
+
+      const hud =
+        document.getElementById(
+          `hud-${position}`
+        );
+
+
+      hud.classList.toggle(
+        "hero",
+        position === state.hero.position
+      );
+
+    });
+
+
+    /*
+      Update Hero position.
+
+      Because the original HTML has a fixed
+      CO hero layout, this moves the hero class
+      visually but keeps the table stable.
+    */
+
+    positions.forEach(position => {
+
+      const hud =
+        document.getElementById(
+          `hud-${position}`
+        );
+
+      const heroBadge =
+        hud.querySelector(".hero-badge");
+
+      if (position === state.hero.position) {
+
+        if (!heroBadge) {
+
+          const positionElement =
+            hud.querySelector(".player-position");
+
+          const badge =
+            document.createElement("span");
+
+          badge.className =
+            "hero-badge";
+
+          badge.textContent =
+            "HERO";
+
+          positionElement.appendChild(
+            badge
+          );
+        }
+
+      } else {
+
+        if (heroBadge) {
+          heroBadge.remove();
+        }
+      }
+
+    });
+
+
+    document.getElementById(
+      "pot-value"
+    ).textContent =
+      `${round(state.pot)} BB`;
+
+  }
+
+
+  function betLabel(player) {
+
+    if (player.currentBet === .5) {
+      return "blind";
+    }
+
+    if (player.currentBet === 1) {
+      return "blind";
+    }
+
+    if (player.action === "raise") {
+      return "raise";
+    }
+
+    if (player.action === "3bet") {
+      return "3-bet";
+    }
+
+    if (player.action === "4bet") {
+      return "4-bet";
+    }
+
+    if (player.action === "bet") {
+      return "bet";
+    }
+
+    if (player.action === "limp") {
+      return "limp";
+    }
+
+    return "current bet";
+  }
+
+
+  function renderBoard() {
+
+    const board =
+      document.getElementById("board");
+
+    board.innerHTML = "";
+
+
+    const cards =
+      state.board;
+
+
+    for (let i = 0; i < 5; i++) {
+
+      const card =
+        document.createElement("div");
+
+      if (cards[i]) {
+
+        card.className =
+          "card" +
+          (
+            cardIsRed(cards[i])
+              ? " red"
+              : ""
+          );
+
+        card.textContent =
+          cards[i];
+
+      } else {
+
+        card.className =
+          "card empty";
+      }
+
+      board.appendChild(card);
+    }
+
+
+    /*
+      Hero cards.
+    */
+
+    const heroCards =
+      document.getElementById(
+        "hero-cards"
+      );
+
+    heroCards.innerHTML = "";
+
+
+    state.hero.cards.forEach(
+      cardValue => {
+
+        const card =
+          document.createElement("div");
+
+        card.className =
+          "card" +
+          (
+            cardIsRed(cardValue)
+              ? " red"
+              : ""
+          );
+
+        card.textContent =
+          cardValue;
+
+        heroCards.appendChild(card);
+
+      }
+    );
+
+  }
+
+
+  function renderActions() {
+
+    const container =
+      document.getElementById(
+        "action-history"
+      );
+
+    container.innerHTML = "";
+
+
+    const grouped = {
+
+      preflop: [],
+      flop: [],
+      turn: [],
+      river: []
+
+    };
+
+
+    state.actions.forEach(action => {
+
+      const street =
+        action.street || "preflop";
+
+      if (!grouped[street]) {
+        grouped[street] = [];
+      }
+
+      grouped[street].push(action);
+
+    });
+
+
+    Object.entries(grouped).forEach(
+      ([street, actions]) => {
+
+        if (!actions.length) {
+          return;
+        }
+
+
+        const label =
+          document.createElement("div");
+
+        label.className =
+          "street-label";
+
+        label.textContent =
+          street;
+
+        container.appendChild(label);
+
+
+        actions.forEach(action => {
+
+          const row =
+            document.createElement("div");
+
+          row.className =
+            "action-row";
+
+
+          const pos =
+            document.createElement("span");
+
+          pos.className =
+            "action-position";
+
+          pos.textContent =
+            action.position;
+
+
+          const name =
+            document.createElement("span");
+
+          name.className =
+            "action-name";
+
+          name.textContent =
+            action.action;
+
+
+          const amount =
+            document.createElement("span");
+
+          amount.className =
+            "action-amount";
+
+          amount.textContent =
+            action.amount
+              ? `${action.amount} BB`
+              : "";
+
+
+          row.append(
+            pos,
+            name,
+            amount
+          );
+
+          container.appendChild(row);
+
+        });
+
+      }
+    );
+
+
+    document.getElementById(
+      "street-display"
+    ).textContent =
+      state.board.length
+        ? "Postflop"
+        : "Preflop";
+
+  }
+
+
+  /* ==================================================
+     REACTION HUD
+  ================================================== */
+
+  function renderReactions() {
+
+    const container =
+      document.getElementById(
+        "reaction-content"
+      );
+
+    container.innerHTML = "";
+
+
+    /*
+      Show opponents who have actually
+      taken part in the current hand.
+    */
+
+    const activePlayers =
+      positions.filter(
+        position =>
+          position !== state.hero.position &&
+          state.players[position].action !== "waiting"
+      );
+
+
+    if (!activePlayers.length) {
+
+      container.innerHTML = `
+        <div style="
+          color: var(--muted);
+          font-size: 11px;
+          line-height: 1.5;
+        ">
+          Player reaction frequencies will appear
+          here as opponents become involved in
+          the training hand.
+        </div>
+      `;
+
+      return;
+    }
+
+
+    activePlayers.forEach(position => {
+
+      const player =
+        state.players[position];
+
+      const profile =
+        playerProfiles[player.profile];
+
+
+      const wrapper =
+        document.createElement("div");
+
+      wrapper.className =
+        "reaction-player";
+
+
+      wrapper.innerHTML = `
+
+        <div class="reaction-name">
+
+          <strong>
+            ${position} · ${player.profile}
+          </strong>
+
+          <span>
+            VPIP ${player.vpip} / PFR ${player.pfr}
+          </span>
+
+        </div>
+
+        <div class="reaction-bars">
+
+          <div
+            class="reaction-fold"
+            style="width:${profile.reactions.fold}%">
+          </div>
+
+          <div
+            class="reaction-call"
+            style="width:${profile.reactions.call}%">
+          </div>
+
+          <div
+            class="reaction-raise"
+            style="width:${profile.reactions.raise}%">
+          </div>
+
+        </div>
+
+        <div class="reaction-legend">
+
+          <span>
+            <i
+              class="legend-dot reaction-fold">
+            </i>
+            Fold ${profile.reactions.fold}%
+          </span>
+
+          <span>
+            <i
+              class="legend-dot reaction-call">
+            </i>
+            Call ${profile.reactions.call}%
+          </span>
+
+          <span>
+            <i
+              class="legend-dot reaction-raise">
+            </i>
+            Raise ${profile.reactions.raise}%
+          </span>
+
+        </div>
+      `;
+
+
+      container.appendChild(wrapper);
+
+    });
+
+  }
+
+
+  /* ==================================================
+     DECISION PANEL
+  ================================================== */
+
+  function renderDecision() {
+
+    const container =
+      document.getElementById(
+        "decision-buttons"
+      );
+
+    container.innerHTML = "";
+
+
+    state.availableActions.forEach(
+      action => {
+
+        const button =
+          document.createElement("button");
+
+        button.className =
+          "decision-button";
+
+
+        if (
+          action === "raise" ||
+          action === "3bet" ||
+          action === "4bet" ||
+          action === "all-in"
+        ) {
+          button.classList.add("primary");
+        }
+
+
+        if (action === "fold") {
+          button.classList.add("danger");
+        }
+
+
+        button.textContent =
+          formatAction(action);
+
+
+        button.addEventListener(
+          "click",
+          () => answer(action)
+        );
+
+
+        container.appendChild(button);
+
+      }
+    );
+
+
+    document.getElementById(
+      "decision-subtitle"
+    ).textContent =
+      `${state.hero.position} · ${scenarioDecisionText()}`;
+
+
+    document.getElementById(
+      "decision-pot"
+    ).textContent =
+      `Pot: ${round(state.pot)} BB`;
+
+  }
+
+
+  function scenarioDecisionText() {
+
+    const scenario =
+      state.scenario;
+
+
+    if (scenario === "rfi") {
+      return "First in";
+    }
+
+    if (scenario === "facing-rfi") {
+      return "Facing an open";
+    }
+
+    if (scenario === "facing-3bet") {
+      return "Facing a 3-bet";
+    }
+
+    if (scenario === "4bet-pot") {
+      return "Facing a 4-bet";
+    }
+
+    if (scenario === "blind-vs-blind") {
+      return "Blind vs blind";
+    }
+
+    return "Decision point";
+  }
+
+
+  function formatAction(action) {
+
+    const names = {
+
+      fold: "Fold",
+
+      check: "Check",
+
+      call: "Call",
+
+      raise: "Raise",
+
+      "3bet": "3-Bet",
+
+      "4bet": "4-Bet",
+
+      "all-in": "All-In"
+
+    };
+
+    return names[action] || action;
+
+  }
+
+
+  /* ==================================================
+     ANSWER
+  ================================================== */
+
+  function answer(action) {
+
+    if (state.answered) {
+      return;
+    }
+
+
+    state.answered = true;
+
+
+    const feedback =
+      document.getElementById(
+        "feedback"
+      );
+
+
+    const correct =
+      action === state.correctAction;
+
+
+    feedback.className =
+      "feedback show " +
+      (
+        correct
+          ? "correct"
+          : "incorrect"
+      );
+
+
+    if (correct) {
+
+      feedback.innerHTML = `
+        <strong>Correct.</strong>
+        You selected <strong>${formatAction(action)}</strong>.
+        <br>
+        Demo trainer answer:
+        <strong>${formatAction(state.correctAction)}</strong>.
+        This will later be replaced by the actual
+        GTO frequency model.
+      `;
+
+    } else {
+
+      feedback.innerHTML = `
+        <strong>Not the demo answer.</strong>
+        You selected <strong>${formatAction(action)}</strong>.
+        <br>
+        Demo trainer answer:
+        <strong>${formatAction(state.correctAction)}</strong>.
+        Remember that the current strategy is only
+        placeholder logic.
+      `;
+
+    }
+
+
+    /*
+      Disable decision buttons.
+    */
+
+    document
+      .querySelectorAll(".decision-button")
+      .forEach(button => {
+        button.disabled = true;
+        button.style.opacity = ".5";
+        button.style.cursor = "default";
+      });
+
+
+    /*
+      Add Hero action to history.
+    */
+
+    state.actions.push({
+
+      street:
+        state.board.length
+          ? "flop"
+          : "preflop",
+
+      position:
+        state.hero.position,
+
+      action,
+
+      amount:
+        action === "raise"
+          ? 7.5
+          : null
+
+    });
+
+
+    renderActions();
+
+  }
+
+
+  /* ==================================================
+     UTIL
+  ================================================== */
+
+  function round(value) {
+
+    return Number(
+      value.toFixed(1)
+    );
+
+  }
+
+
+  /* ==================================================
+     EVENTS
+  ================================================== */
+
+  document
+    .getElementById("new-hand")
+    .addEventListener(
+      "click",
+      generateScenario
+    );
+
+
+  document
+    .getElementById("scenario-select")
+    .addEventListener(
+      "change",
+      generateScenario
+    );
+
+
+  document
+    .getElementById("stack-select")
+    .addEventListener(
+      "change",
+      generateScenario
+    );
+
+
+  /* ==================================================
+     START
+  ================================================== */
+
+  generateScenario();
+
+</script>
+
+</body>
+</html>
