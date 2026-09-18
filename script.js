@@ -1,504 +1,258 @@
+const ranges = {
+  "lh-rfi": RANGE_LH_RFI,
+  "lh-iso": RANGE_LH_ISO
+};
+
+function getCurrentRange() {
+  if (state.position === "LH" && state.action === "rfi") {
+    return ranges["lh-rfi"];
+  }
+
+  if (state.position === "LH" && state.action === "iso") {
+    return ranges["lh-iso"];
+  }
+
+  return null;
+}
+
 const ranks = [
   "A", "K", "Q", "J", "T",
   "9", "8", "7", "6", "5",
   "4", "3", "2"
 ];
 
-
-/* =========================================================
-   POSITIONS
-========================================================= */
-
 const positions = {
-
-  "6max": [
-    "UTG",
-    "HJ",
-    "CO",
-    "BTN",
-    "SB",
-    "BB"
-  ],
-
-  "9max": [
-    "UTG",
-    "UTG1",
-    "MP",
-    "MP1",
-    "HJ",
-    "CO",
-    "BTN",
-    "SB",
-    "BB"
-  ]
-
+  "6max": ["LH", "HJ", "CO", "BTN", "SB", "BB"],
+  "9max": ["UTG-3", "UTG-2", "UTG-1", "LH", "HJ", "CO", "BTN", "SB", "BB"]
 };
 
-
-/* =========================================================
-   POSITION DESCRIPTIONS
-========================================================= */
-
 const positionDescriptions = {
-
-  UTG: "Under the gun first-in strategy.",
-  UTG1: "UTG+1 first-in strategy.",
-  MP: "Middle position first-in strategy.",
-  MP1: "MP+1 first-in strategy.",
+  "UTG-3": "UTG-3 first-in strategy.",
+  "UTG-2": "UTG-2 first-in strategy.",
+  "UTG-1": "UTG-1 first-in strategy.",
+  LH: "Late hijack strategy.",
   HJ: "Hijack first-in strategy.",
   CO: "Cutoff opens first-in against the remaining players.",
   BTN: "Button opens first-in with the widest practical range.",
   SB: "Small blind first-in strategy versus the big blind.",
   BB: "Big blind strategy versus an opponent open."
-
 };
-
-
-/* =========================================================
-   STATE
-========================================================= */
 
 const state = {
-
   format: "6max",
-
-  position: "CO",
-
+  position: "LH",
   action: "rfi",
-
   filter: "all",
-
   selected: "AA"
-
 };
 
-
-/* =========================================================
-   DOM
-========================================================= */
-
-const positionList =
-  document.getElementById("position-list");
-
-const grid =
-  document.getElementById("hand-grid");
-
-const title =
-  document.getElementById("range-title");
-
-const subtitle =
-  document.getElementById("range-subtitle");
-
-const comboCount =
-  document.getElementById("combo-count");
-
-const rangePercent =
-  document.getElementById("range-percent");
-
-const raisePercent =
-  document.getElementById("raise-percent");
-
-const detailsHand =
-  document.getElementById("details-hand");
-
-const detailsTitle =
-  document.getElementById("details-title");
-
-const detailsCopy =
-  document.getElementById("details-copy");
-
-const detailsFrequency =
-  document.getElementById("details-frequency");
-
-
-/* =========================================================
-   HAND NAMES
-========================================================= */
+const positionList = document.getElementById("position-list");
+const grid = document.getElementById("hand-grid");
+const title = document.getElementById("range-title");
+const subtitle = document.getElementById("range-subtitle");
+const comboCount = document.getElementById("combo-count");
+const rangePercent = document.getElementById("range-percent");
+const raisePercent = document.getElementById("raise-percent");
+const detailsHand = document.getElementById("details-hand");
+const detailsTitle = document.getElementById("details-title");
+const detailsCopy = document.getElementById("details-copy");
+const detailsFrequency = document.getElementById("details-frequency");
 
 function handName(hand) {
-
   const a = hand[0];
   const b = hand[1];
   const suffix = hand[2] || "";
 
-  if (a === b) {
-    return `Pocket ${a}s`;
-  }
-
-  if (suffix === "s") {
-    return `${a}${b} suited`;
-  }
-
+  if (a === b) return `Pocket ${a}s`;
+  if (suffix === "s") return `${a}${b} suited`;
   return `${a}${b} offsuit`;
 }
 
-
-/* =========================================================
-   COMBINATION COUNT
-========================================================= */
-
 function comboCountFor(hand) {
-
-  if (hand[0] === hand[1]) {
-    return 6;
-  }
-
-  if (hand.endsWith("s")) {
-    return 4;
-  }
-
+  if (hand[0] === hand[1]) return 6;
+  if (hand.endsWith("s")) return 4;
   return 12;
 }
 
-
-/* =========================================================
-   POSITION INDEX
-========================================================= */
-
 function positionIndex(position) {
-
   return positions[state.format].indexOf(position);
 }
 
-
-/* =========================================================
-   AVAILABLE ACTIONS
-========================================================= */
-
 function getActionsForPosition(position) {
-
   const index = positionIndex(position);
-
   const actions = [];
 
-  /*
-    BB doesn't have an RFI situation in the
-    traditional first-in sense.
-  */
-
   if (position !== "BB") {
-    actions.push({
-      id: "rfi",
-      label: "RFI"
-    });
+    actions.push({ id: "rfi", label: "RFI" });
   }
 
-  /*
-    ISO can be used from positions facing
-    limpers.
-  */
-
-  actions.push({
-    id: "iso",
-    label: "ISO"
-  });
-
-
-  /*
-    Add VS situations against positions
-    that act before this position.
-  */
+  actions.push({ id: "iso", label: "ISO" });
 
   if (index > 0) {
-
-    positions[state.format]
-      .slice(0, index)
-      .forEach(opponent => {
-
-        actions.push({
-          id: `vs-${opponent}`,
-          label: `vs ${opponent}`
-        });
-
+    positions[state.format].slice(0, index).forEach(opponent => {
+      actions.push({
+        id: `vs-${opponent}`,
+        label: `vs ${opponent}`
       });
-
+    });
   }
-
-
-  /*
-    BB gets VS situations against every
-    position before it.
-  */
 
   return actions;
 }
 
-
-/* =========================================================
-   BUILD POSITION SIDEBAR
-========================================================= */
-
 function buildPositionList() {
-
   positionList.innerHTML = "";
 
-  const currentPositions =
-    positions[state.format];
-
-
-  currentPositions.forEach(position => {
-
-    const wrapper =
-      document.createElement("div");
-
+  positions[state.format].forEach(position => {
+    const wrapper = document.createElement("div");
     wrapper.className = "position-group";
 
-
-    /*
-      Position button
-    */
-
-    const positionButton =
-      document.createElement("button");
-
-    positionButton.className =
-      "position-button";
-
+    const positionButton = document.createElement("button");
+    positionButton.className = "position-button";
 
     if (state.position === position) {
       positionButton.classList.add("active");
     }
-
 
     positionButton.innerHTML = `
       <span>${position}</span>
       <span class="position-arrow">›</span>
     `;
 
+    positionButton.addEventListener("click", () => {
+      state.position = position;
 
-    positionButton.addEventListener(
-      "click",
-      () => {
+      const actions = getActionsForPosition(position);
+      state.action = actions.some(action => action.id === "rfi")
+        ? "rfi"
+        : actions[0]?.id || "iso";
 
-        state.position = position;
-
-        const actions =
-          getActionsForPosition(position);
-
-        /*
-          Default to RFI when available.
-        */
-
-        if (
-          actions.some(
-            action => action.id === "rfi"
-          )
-        ) {
-
-          state.action = "rfi";
-
-        } else {
-
-          state.action =
-            actions[0]?.id || "iso";
-
-        }
-
-        buildPositionList();
-        updateRange();
-
-      }
-    );
-
+      buildPositionList();
+      updateRange();
+    });
 
     wrapper.appendChild(positionButton);
 
-
-    /*
-      Action list
-    */
-
-    const actionList =
-      document.createElement("div");
-
-    actionList.className =
-      "position-actions";
-
-
-    const actions =
-      getActionsForPosition(position);
-
-
-    /*
-      Only expand the currently selected
-      position.
-    */
+    const actionList = document.createElement("div");
+    actionList.className = "position-actions";
 
     if (state.position !== position) {
       actionList.classList.add("collapsed");
     }
 
-
-    actions.forEach(action => {
-
-      const button =
-        document.createElement("button");
-
-      button.className =
-        "position-action";
-
+    getActionsForPosition(position).forEach(action => {
+      const button = document.createElement("button");
+      button.className = "position-action";
 
       if (
         state.position === position &&
         state.action === action.id
       ) {
-
         button.classList.add("active");
-
       }
 
+      button.textContent = action.label;
 
-      button.textContent =
-        action.label;
+      button.addEventListener("click", event => {
+        event.stopPropagation();
 
+        state.position = position;
+        state.action = action.id;
 
-      button.addEventListener(
-        "click",
-        event => {
-
-          event.stopPropagation();
-
-          state.position = position;
-          state.action = action.id;
-
-          buildPositionList();
-          updateRange();
-
-        }
-      );
-
+        buildPositionList();
+        updateRange();
+      });
 
       actionList.appendChild(button);
-
     });
 
-
     wrapper.appendChild(actionList);
-
     positionList.appendChild(wrapper);
-
   });
-
 }
 
+function getRangeAction(hand) {
+  const data = currentRange.hands[hand];
 
-/* =========================================================
-   DEMO RANGE DATA
-========================================================= */
+  if (!data) {
+    return {
+      action: "fold",
+      freq: 0
+    };
+  }
 
-function getActionAndFreq(hand) {
+  const actions = Object.entries(data);
 
+  if (!actions.length) {
+    return {
+      action: "fold",
+      freq: 0
+    };
+  }
+
+  const [action, frequency] = actions.reduce(
+    (best, current) => current[1] > best[1] ? current : best
+  );
+
+  return {
+    action,
+    freq: frequency * 100
+  };
+}
+
+function getGeneratedAction(hand) {
   const a = ranks.indexOf(hand[0]);
   const b = ranks.indexOf(hand[1]);
-
   const pair = a === b;
   const suited = hand.endsWith("s");
   const off = hand.endsWith("o");
 
-
-  /* =======================================================
-     RFI
-  ======================================================= */
-
   if (state.action === "rfi") {
-
     if (pair) {
-
       return {
         action: "raise",
         freq: 100
       };
-
     }
 
-
-    /*
-      Earlier positions get tighter ranges.
-    */
-
-    const index =
-      positionIndex(state.position);
-
+    const index = positionIndex(state.position);
 
     if (index <= 1) {
-
-      if (
-        a === 0 ||
-        (a <= 2 && b <= 4)
-      ) {
-
+      if (a === 0 || (a <= 2 && b <= 4)) {
         return {
           action: "raise",
           freq: suited ? 100 : 80
         };
-
       }
 
-
-      if (
-        suited &&
-        a <= 5 &&
-        b <= 7
-      ) {
-
+      if (suited && a <= 5 && b <= 7) {
         return {
           action: "raise",
           freq: 45
         };
-
       }
-
-    }
-
-
-    /*
-      CO / BTN / later positions
-    */
-
-    else {
-
-      if (
-        a === 0 ||
-        (a <= 3 && b <= 5)
-      ) {
-
+    } else {
+      if (a === 0 || (a <= 3 && b <= 5)) {
         return {
           action: "raise",
           freq: suited ? 100 : 85
         };
-
       }
 
-
-      if (
-        suited &&
-        a <= 7 &&
-        b <= 9
-      ) {
-
+      if (suited && a <= 7 && b <= 9) {
         return {
           action: "raise",
           freq: 55
         };
-
       }
 
-
-      if (
-        suited &&
-        a <= 9 &&
-        b <= 11
-      ) {
-
+      if (suited && a <= 9 && b <= 11) {
         return {
           action: "raise",
           freq: 25
         };
-
       }
-
     }
-
 
     return {
       action: "fold",
@@ -506,641 +260,288 @@ function getActionAndFreq(hand) {
     };
   }
 
-
-  /* =======================================================
-     ISO
-  ======================================================= */
-
   if (state.action === "iso") {
-
     if (pair) {
-
       return {
         action: "raise",
         freq: 100
       };
-
     }
 
-
-    if (
-      a === 0 ||
-      (a <= 3 && b <= 5)
-    ) {
-
+    if (a === 0 || (a <= 3 && b <= 5)) {
       return {
         action: "raise",
         freq: suited ? 100 : 75
       };
-
     }
 
-
-    if (
-      suited &&
-      a <= 7 &&
-      b <= 9
-    ) {
-
+    if (suited && a <= 7 && b <= 9) {
       return {
         action: "raise",
         freq: 50
       };
-
     }
-
 
     return {
       action: "fold",
       freq: 0
     };
-
   }
 
-
-  /* =======================================================
-     VS POSITION
-  ======================================================= */
-
   if (state.action.startsWith("vs-")) {
-
-    const opponent =
-      state.action.replace("vs-", "");
-
-
-    const opponentIndex =
-      positions[state.format].indexOf(opponent);
-
-
-    /*
-      Default defense model.
-      Later positions generally create
-      wider defending ranges.
-    */
+    const opponent = state.action.replace("vs-", "");
+    const opponentIndex = positions[state.format].indexOf(opponent);
 
     if (pair) {
-
       if (a <= 3) {
-
         return {
           action: "raise",
           freq: 55
         };
-
       }
 
       return {
         action: "call",
         freq: 100
       };
-
     }
 
-
-    /*
-      Strong hands
-    */
-
-    if (
-      a === 0 ||
-      (a <= 3 && b <= 4)
-    ) {
-
+    if (a === 0 || (a <= 3 && b <= 4)) {
       return {
         action: "call",
         freq: 80
       };
-
     }
 
-
-    /*
-      Suited hands
-    */
-
-    if (
-      suited &&
-      a <= 7 &&
-      b <= 9
-    ) {
-
+    if (suited && a <= 7 && b <= 9) {
       return {
         action: "call",
         freq: 65
       };
-
     }
 
-
-    /*
-      Wider defense versus later opens
-    */
-
     if (
-      opponentIndex >=
-      positions[state.format].length - 3 &&
+      opponentIndex >= positions[state.format].length - 3 &&
       suited &&
       a <= 10 &&
       b <= 11
     ) {
-
       return {
         action: "call",
         freq: 45
       };
-
     }
 
-
-    /*
-      Some offsuit broadways
-    */
-
-    if (
-      off &&
-      a <= 4 &&
-      b <= 4
-    ) {
-
+    if (off && a <= 4 && b <= 4) {
       return {
         action: "call",
         freq: 35
       };
-
     }
-
 
     return {
       action: "fold",
       freq: 0
     };
-
   }
-
 
   return {
     action: "fold",
     freq: 0
   };
-
 }
 
+function getActionAndFreq(hand) {
+  const range = getCurrentRange();
 
-/* =========================================================
-   BUILD GRID
-========================================================= */
+  if (range) {
+    const data = range.hands[hand];
+
+    if (!data) {
+      return {
+        action: "fold",
+        freq: 0
+      };
+    }
+
+    const [action, frequency] = Object.entries(data).reduce(
+      (best, current) => current[1] > best[1] ? current : best
+    );
+
+    return {
+      action,
+      freq: frequency * 100
+    };
+  }
+
+  return getGeneratedAction(hand);
+}
 
 function buildGrid() {
-
   grid.innerHTML = "";
 
-
   ranks.forEach((r1, row) => {
-
     ranks.forEach((r2, col) => {
-
       let hand;
 
-
       if (row === col) {
-
         hand = r1 + r2;
-
-      }
-
-      else if (row < col) {
-
+      } else if (row < col) {
         hand = r1 + r2 + "s";
-
-      }
-
-      else {
-
+      } else {
         hand = r2 + r1 + "o";
-
       }
 
+      const data = getActionAndFreq(hand);
+      const cell = document.createElement("button");
 
-      const data =
-        getActionAndFreq(hand);
-
-
-      const cell =
-        document.createElement("button");
-
-
-      cell.className =
-        `hand ${data.action}`;
-
-
-      cell.dataset.hand =
-        hand;
-
-      cell.dataset.action =
-        data.action;
-
-      cell.dataset.freq =
-        data.freq;
-
+      cell.className = `hand ${data.action}`;
+      cell.dataset.hand = hand;
+      cell.dataset.action = data.action;
+      cell.dataset.freq = data.freq;
 
       cell.innerHTML = `
         <span>${hand}</span>
         <span class="freq">${data.freq}%</span>
       `;
 
-
-      /*
-        Filter
-      */
-
       if (
         state.filter !== "all" &&
         data.action !== state.filter
       ) {
-
-        cell.classList.add(
-          "filtered-out"
-        );
-
+        cell.classList.add("filtered-out");
       }
 
-
-      /*
-        Selected
-      */
-
-      if (
-        state.selected === hand
-      ) {
-
-        cell.classList.add(
-          "selected"
-        );
-
+      if (state.selected === hand) {
+        cell.classList.add("selected");
       }
-
-
-      /*
-        Tooltip
-      */
 
       cell.title =
-        `${handName(hand)} · ` +
-        `${data.action.toUpperCase()} ` +
-        `${data.freq}%`;
+        `${handName(hand)} · ${data.action.toUpperCase()} ${data.freq}%`;
 
-
-      cell.addEventListener(
-        "click",
-        () => selectHand(hand)
-      );
-
+      cell.addEventListener("click", () => selectHand(hand));
 
       grid.appendChild(cell);
-
     });
-
   });
-
 
   updateStats();
-
 }
-
-
-/* =========================================================
-   UPDATE STATS
-========================================================= */
 
 function updateStats() {
+  const cells = [...grid.querySelectorAll(".hand")];
 
-  const cells = [
-    ...grid.querySelectorAll(".hand")
-  ];
+  const combos = cells.reduce((sum, cell) => {
+    const frequency = Number(cell.dataset.freq);
+    return sum + comboCountFor(cell.dataset.hand) * frequency / 100;
+  }, 0);
 
+  const raiseCombos = cells.reduce((sum, cell) => {
+    if (cell.dataset.action !== "raise") return sum;
 
-  const inRange =
-    cells.filter(
-      cell =>
-        Number(cell.dataset.freq) > 0
-    );
+    const frequency = Number(cell.dataset.freq);
+    return sum + comboCountFor(cell.dataset.hand) * frequency / 100;
+  }, 0);
 
-
-  const combos =
-    inRange.reduce(
-      (sum, cell) => {
-
-        const combosForHand =
-          comboCountFor(
-            cell.dataset.hand
-          );
-
-        const frequency =
-          Number(cell.dataset.freq);
-
-
-        return sum +
-          combosForHand *
-          frequency /
-          100;
-
-      },
-      0
-    );
-
-
-  const total = 1326;
-
-
-  const raiseCells =
-    cells.filter(
-      cell =>
-        cell.dataset.action === "raise"
-    );
-
-
-  const raiseCombos =
-    raiseCells.reduce(
-      (sum, cell) => {
-
-        const combosForHand =
-          comboCountFor(
-            cell.dataset.hand
-          );
-
-        const frequency =
-          Number(cell.dataset.freq);
-
-
-        return sum +
-          combosForHand *
-          frequency /
-          100;
-
-      },
-      0
-    );
-
-
-  comboCount.textContent =
-    Math.round(combos);
-
-
-  rangePercent.textContent =
-    `${(combos / total * 100).toFixed(1)}%`;
-
-
-  raisePercent.textContent =
-    `${(raiseCombos / total * 100).toFixed(1)}%`;
-
+  comboCount.textContent = Math.round(combos);
+  rangePercent.textContent = `${(combos / 1326 * 100).toFixed(1)}%`;
+  raisePercent.textContent = `${(raiseCombos / 1326 * 100).toFixed(1)}%`;
 }
-
-
-/* =========================================================
-   SELECT HAND
-========================================================= */
 
 function selectHand(hand) {
-
   state.selected = hand;
 
+  const data = getActionAndFreq(hand);
+  const range = getCurrentRange();
 
-  const data =
-    getActionAndFreq(hand);
-
-
-  grid
-    .querySelectorAll(".hand")
-    .forEach(cell => {
-
-      cell.classList.toggle(
-        "selected",
-        cell.dataset.hand === hand
-      );
-
-    });
-
-
-  detailsHand.textContent =
-    hand;
-
-
-  detailsTitle.textContent =
-    handName(hand);
-
-
-  detailsFrequency.textContent =
-    `${data.freq}%`;
-
-
-  const action =
-    data.action.charAt(0).toUpperCase() +
-    data.action.slice(1);
-
-
-  detailsCopy.textContent =
-    `${action} ${data.freq}% of the time in this demo range.`;
-
-}
-
-
-/* =========================================================
-   UPDATE RANGE HEADER
-========================================================= */
-
-function updateHeader() {
-
-  const position =
-    state.position;
-
-
-  let actionLabel =
-    state.action.toUpperCase();
-
-
-  if (
-    state.action.startsWith("vs-")
-  ) {
-
-    const opponent =
-      state.action.replace(
-        "vs-",
-        ""
-      );
-
-    actionLabel =
-      `VS ${opponent}`;
-
-  }
-
-
-  title.textContent =
-    `${position} ${actionLabel}`;
-
-
-  if (
-    state.action === "rfi"
-  ) {
-
-    subtitle.textContent =
-      positionDescriptions[position];
-
-  }
-
-  else if (
-    state.action === "iso"
-  ) {
-
-    subtitle.textContent =
-      `${position} isolation strategy versus limpers.`;
-
-  }
-
-  else {
-
-    const opponent =
-      state.action.replace(
-        "vs-",
-        ""
-      );
-
-    subtitle.textContent =
-      `${position} strategy versus a ${opponent} open.`;
-
-  }
-
-}
-
-
-/* =========================================================
-   UPDATE EVERYTHING
-========================================================= */
-
-function updateRange() {
-
-  updateHeader();
-
-  buildGrid();
-
-  selectHand(state.selected);
-
-}
-
-
-/* =========================================================
-   FILTER BUTTONS
-========================================================= */
-
-document
-  .querySelectorAll(".filter")
-  .forEach(button => {
-
-    button.addEventListener(
-      "click",
-      () => {
-
-        state.filter =
-          button.dataset.action;
-
-
-        document
-          .querySelectorAll(".filter")
-          .forEach(filterButton => {
-
-            filterButton.classList.toggle(
-              "active",
-              filterButton === button
-            );
-
-          });
-
-
-        buildGrid();
-
-        selectHand(
-          state.selected
-        );
-
-      }
-    );
-
+  grid.querySelectorAll(".hand").forEach(cell => {
+    cell.classList.toggle("selected", cell.dataset.hand === hand);
   });
 
+  detailsHand.textContent = hand;
+  detailsTitle.textContent = handName(hand);
+  detailsFrequency.textContent = `${data.freq}%`;
 
-/* =========================================================
-   FORMAT SELECTOR
-========================================================= */
+  const action = data.action.charAt(0).toUpperCase() + data.action.slice(1);
 
-document
-  .getElementById("format")
-  .addEventListener(
-    "change",
-    event => {
+  detailsCopy.textContent = range
+    ? `${action} ${data.freq}% in the ${range.name} ${range.stack}BB range.`
+    : `${action} ${data.freq}% in this demo range.`;
+}
 
-      state.format =
-        event.target.value;
+function updateHeader() {
+  const position = state.position;
+  const range = getCurrentRange();
 
+  let actionLabel = state.action.toUpperCase();
 
-      const availablePositions =
-        positions[state.format];
+  if (state.action.startsWith("vs-")) {
+    actionLabel = `VS ${state.action.replace("vs-", "")}`;
+  }
 
+  title.textContent = `${position} ${actionLabel}`;
 
-      /*
-        Preserve the selected position
-        when possible.
-      */
+  if (range) {
+    subtitle.textContent = `${range.name} · ${range.stack}BB`;
+    return;
+  }
 
-      if (
-        !availablePositions.includes(
-          state.position
-        )
-      ) {
+  if (state.action === "rfi") {
+    subtitle.textContent = positionDescriptions[position];
+    return;
+  }
 
-        state.position =
-          availablePositions[
-            availablePositions.length - 2
-          ];
+  if (state.action === "iso") {
+    subtitle.textContent = `${position} isolation strategy versus limpers.`;
+    return;
+  }
 
-      }
+  const opponent = state.action.replace("vs-", "");
+  subtitle.textContent = `${position} strategy versus a ${opponent} open.`;
+}
 
+function updateRange() {
+  updateHeader();
+  buildGrid();
+  selectHand(state.selected);
+}
 
-      /*
-        Reset action to RFI when available.
-      */
+document.querySelectorAll(".filter").forEach(button => {
+  button.addEventListener("click", () => {
+    state.filter = button.dataset.action;
 
-      const actions =
-        getActionsForPosition(
-          state.position
-        );
+    document.querySelectorAll(".filter").forEach(filterButton => {
+      filterButton.classList.toggle(
+        "active",
+        filterButton === button
+      );
+    });
 
+    buildGrid();
+    selectHand(state.selected);
+  });
+});
 
-      if (
-        !actions.some(
-          action =>
-            action.id === state.action
-        )
-      ) {
+document.getElementById("format").addEventListener("change", event => {
+  state.format = event.target.value;
 
-        state.action =
-          actions[0]?.id || "iso";
+  const availablePositions = positions[state.format];
 
-      }
+  if (!availablePositions.includes(state.position)) {
+    state.position =
+      availablePositions[availablePositions.length - 2];
+  }
 
+  const actions = getActionsForPosition(state.position);
 
-      buildPositionList();
+  if (!actions.some(action => action.id === state.action)) {
+    state.action = actions[0]?.id || "iso";
+  }
 
-      updateRange();
-
-    }
-  );
-
-
-/* =========================================================
-   INITIALIZE
-========================================================= */
+  buildPositionList();
+  updateRange();
+});
 
 buildPositionList();
-
 updateRange();
-
 selectHand("AA");
