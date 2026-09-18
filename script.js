@@ -1,6 +1,9 @@
 const ranges = {
   "lh-rfi": RANGE_LH_RFI,
-  "lh-iso": RANGE_LH_ISO
+  "lh-iso": RANGE_LH_ISO,
+  "hj-rfi": RANGE_HJ_RFI,
+  "co-rfi": RANGE_CO_RFI,
+  "btn-rfi": RANGE_BTN_RFI
 };
 
 function getCurrentRange() {
@@ -10,6 +13,18 @@ function getCurrentRange() {
 
   if (state.position === "LH" && state.action === "iso") {
     return ranges["lh-iso"];
+  }
+
+  if (state.position === "HJ" && state.action === "rfi") {
+    return ranges["hj-rfi"];
+  }
+
+  if (state.position === "CO" && state.action === "rfi") {
+    return ranges["co-rfi"];
+  }
+
+  if (state.position === "BTN" && state.action === "rfi") {
+    return ranges["btn-rfi"];
   }
 
   return null;
@@ -38,10 +53,38 @@ const positionDescriptions = {
   BB: "Big blind strategy versus an opponent open."
 };
 
+function getSavedState() {
+  const cookieName = "poker-range-state=";
+  const cookies = document.cookie ? document.cookie.split(";") : [];
+  const match = cookies.find(cookie => cookie.trim().startsWith(cookieName));
+
+  if (!match) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(decodeURIComponent(match.trim().slice(cookieName.length)));
+  } catch (error) {
+    return null;
+  }
+}
+
+function saveSelectedState() {
+  const payload = {
+    format: state.format,
+    position: state.position,
+    action: state.action
+  };
+
+  document.cookie = `poker-range-state=${encodeURIComponent(JSON.stringify(payload))}; path=/; max-age=${60 * 60 * 24 * 365}`;
+}
+
+const savedState = getSavedState();
+
 const state = {
-  format: "6max",
-  position: "LH",
-  action: "rfi",
+  format: savedState?.format || "6max",
+  position: savedState?.position || "LH",
+  action: savedState?.action || "rfi",
   filter: "all",
   selected: "AA"
 };
@@ -127,6 +170,7 @@ function buildPositionList() {
         ? "rfi"
         : actions[0]?.id || "iso";
 
+      saveSelectedState();
       buildPositionList();
       updateRange();
     });
@@ -159,6 +203,7 @@ function buildPositionList() {
         state.position = position;
         state.action = action.id;
 
+        saveSelectedState();
         buildPositionList();
         updateRange();
       });
@@ -351,6 +396,36 @@ function getGeneratedAction(hand) {
   };
 }
 
+function getDominantAction(data) {
+  if (!data || !Object.keys(data).length) {
+    return {
+      action: "fold",
+      freq: 0,
+      actions: { fold: 0 }
+    };
+  }
+
+  const [action, frequency] = Object.entries(data).reduce(
+    (best, current) => current[1] > best[1] ? current : best
+  );
+
+  return {
+    action,
+    freq: frequency * 100,
+    actions: data
+  };
+}
+
+function formatActionBreakdown(actions) {
+  if (!actions || !Object.keys(actions).length) {
+    return "fold -> 0%";
+  }
+
+  return Object.entries(actions)
+    .map(([action, value]) => `${action} -> ${Math.round(value * 100)}%`)
+    .join(" ");
+}
+
 function getActionAndFreq(hand) {
   const range = getCurrentRange();
 
@@ -360,21 +435,74 @@ function getActionAndFreq(hand) {
     if (!data) {
       return {
         action: "fold",
-        freq: 0
+        freq: 0,
+        actions: { fold: 0 }
       };
     }
 
-    const [action, frequency] = Object.entries(data).reduce(
-      (best, current) => current[1] > best[1] ? current : best
-    );
+    return getDominantAction(data);
+  }
 
+  const generated = getGeneratedAction(hand);
+  return {
+    ...generated,
+    actions: { [generated.action]: generated.freq / 100 }
+  };
+}
+
+function getActionTone(actions) {
+  const palette = {
+    raise: { rgb: "220, 53, 69", text: "#ffe5e8" },
+    optionalRaise: { rgb: "255, 153, 0", text: "#fff1d6" },
+    call: { rgb: "40, 167, 69", text: "#e9f9ee" },
+    limp: { rgb: "142, 146, 153", text: "#f3f4f6" },
+    "3bet": { rgb: "123, 77, 255", text: "#f1ebff" },
+    fold: { rgb: "32, 41, 52", text: "#aeb8c4" }
+  };
+
+  const entries = Object.entries(actions || {}).map(([action, value]) => ({
+    action,
+    value: Number(value) || 0
+  }));
+
+  if (!entries.length) {
+    const tone = palette.fold;
     return {
-      action,
-      freq: frequency * 100
+      background: `rgba(${tone.rgb}, 0.2)`,
+      color: tone.text,
+      borderColor: "rgba(255,255,255,0.08)"
     };
   }
 
-  return getGeneratedAction(hand);
+  const total = entries.reduce((sum, entry) => sum + entry.value, 0) || 1;
+
+  if (entries.length === 1) {
+    const entry = entries[0];
+    const tone = palette[entry.action] || palette.fold;
+    const alpha = Math.min(1, Math.max(0.18, entry.value / total));
+
+    return {
+      background: `rgba(${tone.rgb}, ${alpha})`,
+      color: tone.text,
+      borderColor: `rgba(255,255,255,${0.08 + alpha * 0.18})`
+    };
+  }
+
+  let cursor = 0;
+  const stops = entries.map(entry => {
+    const tone = palette[entry.action] || palette.fold;
+    const width = (entry.value / total) * 100;
+    const start = cursor;
+    const end = cursor + width;
+    cursor = end;
+    return `rgb(${tone.rgb}) ${start}% ${end}%`;
+  });
+
+  return {
+    background: `linear-gradient(90deg, ${stops.join(", ")})`,
+    color: "#ffffff",
+    borderColor: "rgba(255,255,255,0.18)"
+  };
 }
 
 function buildGrid() {
@@ -394,16 +522,17 @@ function buildGrid() {
 
       const data = getActionAndFreq(hand);
       const cell = document.createElement("button");
+      const tone = getActionTone(data.actions);
 
       cell.className = `hand ${data.action}`;
       cell.dataset.hand = hand;
       cell.dataset.action = data.action;
       cell.dataset.freq = data.freq;
+      cell.style.background = tone.background;
+      cell.style.color = tone.color;
+      cell.style.borderColor = tone.borderColor;
 
-      cell.innerHTML = `
-        <span>${hand}</span>
-        <span class="freq">${data.freq}%</span>
-      `;
+      cell.innerHTML = `<span>${hand}</span>`;
 
       if (
         state.filter !== "all" &&
@@ -417,7 +546,7 @@ function buildGrid() {
       }
 
       cell.title =
-        `${handName(hand)} · ${data.action.toUpperCase()} ${data.freq}%`;
+        `${handName(hand)} · ${formatActionBreakdown(data.actions)}`;
 
       cell.addEventListener("click", () => selectHand(hand));
 
@@ -460,13 +589,13 @@ function selectHand(hand) {
 
   detailsHand.textContent = hand;
   detailsTitle.textContent = handName(hand);
-  detailsFrequency.textContent = `${data.freq}%`;
+  detailsFrequency.textContent = formatActionBreakdown(data.actions);
 
   const action = data.action.charAt(0).toUpperCase() + data.action.slice(1);
 
   detailsCopy.textContent = range
-    ? `${action} ${data.freq}% in the ${range.name} ${range.stack}BB range.`
-    : `${action} ${data.freq}% in this demo range.`;
+    ? `${action} in the ${range.name} ${range.stack || ""}BB range — ${formatActionBreakdown(data.actions)}.`
+    : `${action} in this demo range — ${formatActionBreakdown(data.actions)}.`;
 }
 
 function updateHeader() {
@@ -538,6 +667,7 @@ document.getElementById("format").addEventListener("change", event => {
     state.action = actions[0]?.id || "iso";
   }
 
+  saveSelectedState();
   buildPositionList();
   updateRange();
 });

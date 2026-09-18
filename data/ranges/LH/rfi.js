@@ -2,58 +2,98 @@ const RANGE_LH_RFI = {
   name: "LH RFI",
   position: "LH",
   hands: (() => {
-    const ranks = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"];
-    const hands = {};
-
-    for (let i = 0; i < ranks.length; i++) {
-      for (let j = i; j < ranks.length; j++) {
-        const a = ranks[i];
-        const b = ranks[j];
-        const isPair = a === b;
-
-        if (isPair) {
-          hands[`${a}${b}`] = { raise: 1 };
-          continue;
-        }
-
-        const suitedKey = `${a}${b}s`;
-        const offsuitKey = `${a}${b}o`;
-
-        if ((a === "A" || a === "K" || a === "Q") && (b === "A" || b === "K" || b === "Q" || b === "J" || b === "T")) {
-          hands[suitedKey] = { raise: 0.95 };
-          hands[offsuitKey] = { raise: 0.9 };
-          continue;
-        }
-
-        if ((a === "A" || a === "K") && (b === "9" || b === "8" || b === "7")) {
-          hands[suitedKey] = { raise: 0.8 };
-          hands[offsuitKey] = { raise: 0.75 };
-          continue;
-        }
-
-        if ((a === "Q" || a === "J") && (b === "9" || b === "8" || b === "7")) {
-          hands[suitedKey] = { raise: 0.65 };
-          hands[offsuitKey] = { raise: 0.6 };
-          continue;
-        }
-
-        if (a === "T" && (b === "9" || b === "8")) {
-          hands[suitedKey] = { raise: 0.5 };
-          hands[offsuitKey] = { raise: 0.45 };
-          continue;
-        }
-
-        if ((a === "A" || a === "K") && (b === "6" || b === "5" || b === "4")) {
-          hands[suitedKey] = { call: 0.45 };
-          hands[offsuitKey] = { call: 0.4 };
-          continue;
-        }
-
-        hands[suitedKey] = { fold: 0.05 };
-        hands[offsuitKey] = { fold: 0.05 };
+    const AsHands = buildRangeMap({
+      main: "A",
+      lowest: "2",
+      style: "suited",
+      actions: {
+        raise: 1
       }
-    }
+    });
 
-    return hands;
+    const AoHands = buildRangeMap({
+      main: "A",
+      lowest: "T",
+      style: "offsuit",
+      actions: {
+        raise: 1
+      }
+    });
+
+    const KsHands = buildRangeMap({
+      main: "K",
+      lowest: "8",
+      style: "suited",
+      actions: {
+        raise: 1
+      }
+    });
+
+    const KoHands = buildRangeMap({
+      main: "K",
+      lowest: "J",
+      style: "offsuit",
+      actions: {
+        raise: 1
+      }
+    });
+
+    const QsHands = buildRangeMap({
+      main: "Q",
+      lowest: "T",
+      style: "suited",
+      actions: {
+        raise: 1
+      }
+    });
+
+    const QoHands = buildRangeMap({
+      main: "Q",
+      lowest: "J",
+      style: "offsuit",
+      actions: {
+        raise: 1
+      }
+    });
+
+    const JoHands = buildRangeMap({
+      main: "J",
+      lowest: "T",
+      style: "suited",
+      actions: {
+        raise: 1
+      }
+    });
+
+    const pairHands = buildPocketPairRange({
+      lowest: "A",
+      highest: "8"
+    }).reduce((map, hand) => {
+      map[hand] = {
+        raise: 1
+      };
+      return map;
+    }, {});
+
+    const customRaises = {
+      "K7s": { optionalRaise: 1 },
+      "K6s": { optionalRaise: 1 },
+      "K5s": { optionalRaise: 1 },
+      "Q9s": { optionalRaise: 1 },
+      "KTo": { optionalRaise: 1 },
+      "77": { optionalRaise: 1 }
+    };
+
+    return {
+      ...AsHands,
+      ...AoHands,
+      ...KsHands,
+      ...KoHands,
+      ...QsHands,
+      ...QoHands,
+      ...JoHands,
+      ...pairHands,
+      ...customRaises
+    };
   })()
 };
